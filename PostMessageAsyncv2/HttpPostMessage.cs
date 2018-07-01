@@ -8,7 +8,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AnalyseImagePostMessage
+namespace AnalyseImagePostMessagev2
 {
     public static class HttpPostMessage
     {
@@ -33,28 +33,41 @@ namespace AnalyseImagePostMessage
                 httpClient.DefaultRequestHeaders.Add("x-api-key", jsonPostAPIKEY);
                 httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-                //HTTP JSON Post
-                //string jsonTestString ="{\"description\":\"hello there\",\"locale\":\"en\"}";
-                HttpResponseMessage response = await httpClient.PostAsync(jsonPostURI, new StringContent(itemMessage, Encoding.UTF8, "application/json"));
+                // Temporary code for POC - just POST LabelAnnotation Messages
+                var jsonMessageCheck= new JSONHandler();
+                Boolean jsonMessageCheckResponse = jsonMessageCheck.CheckJSON(itemMessage);
 
-                //Log Response Code from AWS.
-                jsonPostContentResponse = await response.Content.ReadAsStringAsync();
-                if (response.IsSuccessStatusCode)
+                if (jsonMessageCheckResponse)
                 {
-                    IEnumerable<string> jsonPostHeaderResponse;
-                    if (response.Headers.TryGetValues("x-amzn-RequestId", out jsonPostHeaderResponse))
+                    // Main part of code that has been wrapped in temporary If statement.  
+                    //HTTP JSON Post
+                    //string jsonTestString ="{\"description\":\"hello there\",\"locale\":\"en\"}";
+                    HttpResponseMessage response = await httpClient.PostAsync(jsonPostURI, new StringContent(itemMessage, Encoding.UTF8, "application/json"));
+
+                    //Log Response Code from AWS.
+                    jsonPostContentResponse = await response.Content.ReadAsStringAsync();
+                    if (response.IsSuccessStatusCode)
                     {
-                        log.Info($"AWS Post Success.\nAWSRequestID={jsonPostHeaderResponse.First()}\nAWSAPIResponse={jsonPostContentResponse}");
+                        IEnumerable<string> jsonPostHeaderResponse;
+                        if (response.Headers.TryGetValues("x-amzn-RequestId", out jsonPostHeaderResponse))
+                        {
+                            log.Info($"AWS Post Success.\nAWSRequestID={jsonPostHeaderResponse.First()}\nAWSAPIResponse={jsonPostContentResponse}");
+                        }
+                        else
+                        {
+                            log.Info($"AWS Post Success.\nAWSRequestID=Not Available\nAWSAPIResponse={jsonPostContentResponse}");
+                        }
+                        httpPostReturnReponse = true;
                     }
                     else
                     {
-                        log.Info($"AWS Post Success.\nAWSRequestID=Not Available\nAWSAPIResponse={jsonPostContentResponse}");
+                        log.Error($"AWS Post Failure.\nAWSAPIResponse={jsonPostContentResponse}");
                     }
-                    httpPostReturnReponse = true;
                 }
                 else
                 {
-                    log.Info($"AWS Post Failure.\nAWSAPIResponse={jsonPostContentResponse}");
+                    log.Info($"AWS Post Skipped for this Annotation Type");
+                    httpPostReturnReponse = true;
                 }
             }
             catch (Exception ex)

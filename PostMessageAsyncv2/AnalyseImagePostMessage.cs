@@ -4,12 +4,12 @@ using Microsoft.WindowsAzure.Storage.Queue;
 using System;
 using System.Threading.Tasks;
 
-namespace AnalyseImagePostMessage
+namespace AnalyseImagePostMessagev2
 {
-    public static class AnalyseImagePostMessage
+    public static class AnalyseImagePostMessagev2
     {
         [FunctionName("AnalyseImagePostMessagev2")]
-        public static async Task Run([QueueTrigger("%MSGQ_NAME_VISION_ANALYSER%", Connection = "ocrmsgqueue")]CloudQueueMessage myQueueItem, TraceWriter log)
+        public static async Task Run([QueueTrigger("vision", Connection = "functionsfactory")]CloudQueueMessage myQueueItem, TraceWriter log)
         {
             Boolean QueueReturnReponse = false;
             try
